@@ -69,6 +69,11 @@ def save_user_profile(sender, instance, **kwargs):
     instance.userprofile.save()
 
 # Custom user manager
+
+from django.conf import settings
+
+user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, email, password=None, date_of_birth=None, **extra_fields):
         if not email:
