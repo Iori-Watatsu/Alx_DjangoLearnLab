@@ -17,7 +17,7 @@ def run_queries():
     # -------------------------
     author_name = "John Doe"
     try:
-        author = Author.objects.get(name=author_name)  # autograder expects this exact line
+        author = Author.objects.get(name=author_name)  
         books_by_author = Book.objects.filter(author=author)
         print(f"\nBooks by {author_name}:")
         for book in books_by_author:
@@ -30,7 +30,7 @@ def run_queries():
     # -------------------------
     library_name = "Central Library"
     try:
-        library = Library.objects.get(name=library_name)  # autograder expects this exact line
+        library = Library.objects.get(name=library_name)
         books_in_library = library.books.all()
         print(f"\nBooks in {library_name}:")
         for book in books_in_library:
@@ -42,10 +42,11 @@ def run_queries():
     # Retrieve the librarian for a library
     # -------------------------
     try:
-        librarian = library.librarian  # autograder expects this exact line
+        librarian = Librarian.objects.get(library=library)
         print(f"\nLibrarian for {library_name}: {librarian.name}")
     except Librarian.DoesNotExist:
         print(f"No librarian assigned to '{library_name}'.")
+
 
 if __name__ == "__main__":
     run_queries()
