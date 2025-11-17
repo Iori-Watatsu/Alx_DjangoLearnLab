@@ -59,7 +59,7 @@ def register(request):
             messages.success(request, f"Account created for {user.username}")
             return redirect('home')
         else:
-        form = UserCreationForm()
+            form = UserCreationForm()
     return render(request, 'relationship_app/register.html', {'form': form})
 
 # RBAC

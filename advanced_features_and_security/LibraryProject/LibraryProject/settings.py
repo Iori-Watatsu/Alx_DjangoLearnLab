@@ -31,7 +31,6 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'accounts',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -40,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'bookshelf',
     'relationship_app',
+    'accounts'
 ]
 
 MIDDLEWARE = [
@@ -125,9 +125,9 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# User Auth
+# Auth
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
-# Media settings for profile photos
+# Uploaded Mdeia Files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
