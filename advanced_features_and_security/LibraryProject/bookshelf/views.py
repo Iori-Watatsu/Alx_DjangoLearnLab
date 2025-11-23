@@ -244,8 +244,6 @@ def dashboard(request):
         'user_comments': user_comments
     })
 
-# Add this to bookshelf/views.py
-
 from .forms import ExampleForm
 
 def example_form_view(request):
