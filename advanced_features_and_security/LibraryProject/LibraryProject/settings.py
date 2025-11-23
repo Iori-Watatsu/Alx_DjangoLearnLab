@@ -11,24 +11,27 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+from django.core.management.utils import get_random_secret_key
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
+# =============================================================================
+# CORE SETTINGS
+# =============================================================================
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-4(xw99mxr(3f6959u6ejr%bd3gy05q!@ynwy#0-b8+b-e$8nio'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-4(xw99mxr(3f6959u6ejr%bd3gy05q!@ynwy#0-b8+b-e$8nio')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DJANGO_DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
-
-# Application definition
+# =============================================================================
+# APPLICATION DEFINITION
+# =============================================================================
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -37,6 +40,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # Security apps
+    'csp',  # Content Security Policy
+    'axes',  # Login rate limiting
+    # Local apps
     'bookshelf',
     'relationship_app',
     'users',
@@ -50,6 +57,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Security middleware
+    'csp.middleware.CSPMiddleware',  # Content Security Policy
+    'axes.middleware.AxesMiddleware',  # Login rate limiting
 ]
 
 ROOT_URLCONF = 'LibraryProject.urls'
@@ -72,9 +82,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'LibraryProject.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
+# =============================================================================
+# DATABASE
+# =============================================================================
 
 DATABASES = {
     'default': {
@@ -83,9 +93,9 @@ DATABASES = {
     }
 }
 
-
-# Password validation
-# https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
+# =============================================================================
+# PASSWORD VALIDATION
+# =============================================================================
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -93,6 +103,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 8,  # Enhanced security
+        }
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -102,46 +115,46 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/4.2/topics/i18n/
+# =============================================================================
+# INTERNATIONALIZATION
+# =============================================================================
 
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.2/howto/static-files/
+# =============================================================================
+# STATIC FILES
+# =============================================================================
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # For production
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Set the custom user model
+# Custom user model
 AUTH_USER_MODEL = 'bookshelf.CustomUser'
 
 # Media files configuration for profile photos
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# =============================================================================
+# SECURITY SETTINGS - HTTPS & SECURE HEADERS
+# =============================================================================
+
 # Security: HTTPS Settings
-SECURE_SSL_REDIRECT = env.bool('DJANGO_SECURE_SSL_REDIRECT', default=False)
+SECURE_SSL_REDIRECT = os.getenv('DJANGO_SECURE_SSL_REDIRECT', 'False').lower() == 'true'
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Security: Cookie Settings
-SESSION_COOKIE_SECURE = env.bool('DJANGO_SESSION_COOKIE_SECURE', default=False)
-CSRF_COOKIE_SECURE = env.bool('DJANGO_CSRF_COOKIE_SECURE', default=False)
+SESSION_COOKIE_SECURE = os.getenv('DJANGO_SESSION_COOKIE_SECURE', 'False').lower() == 'true'
+CSRF_COOKIE_SECURE = os.getenv('DJANGO_CSRF_COOKIE_SECURE', 'False').lower() == 'true'
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = 'Lax'  # or 'Strict' for better security
+SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SAMESITE = 'Lax'
 
 # Security: Browser Protection Headers
@@ -149,15 +162,20 @@ SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = 'DENY'  # Prevent clickjacking
 SECURE_CONTENT_TYPE_NOSNIFF = True  # Prevent MIME type sniffing
 
-# Security: HSTS Settings
-SECURE_HSTS_SECONDS = 31536000  # 1 year
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
+# Security: HSTS Settings (HTTP Strict Transport Security)
+SECURE_HSTS_SECONDS = int(os.getenv('DJANGO_SECURE_HSTS_SECONDS', '31536000'))  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv('DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS', 'True').lower() == 'true'
+SECURE_HSTS_PRELOAD = os.getenv('DJANGO_SECURE_HSTS_PRELOAD', 'True').lower() == 'true'
 
 # Security: Referrer Policy
 SECURE_REFERRER_POLICY = 'same-origin'
 
+# Security: CSRF Trusted Origins
+CSRF_TRUSTED_ORIGINS = os.getenv('DJANGO_CSRF_TRUSTED_ORIGINS', 'http://localhost:8000,http://127.0.0.1:8000').split(',')
+
+# =============================================================================
 # CONTENT SECURITY POLICY (CSP) SETTINGS
+# =============================================================================
 
 # Content Security Policy settings
 CSP_DEFAULT_SRC = ("'self'",)
@@ -170,7 +188,9 @@ CSP_OBJECT_SRC = ("'none'",)
 CSP_BASE_URI = ("'self'",)
 CSP_FRAME_ANCESTORS = ("'none'",)  # Equivalent to X-Frame-Options: DENY
 
+# =============================================================================
 # AUTHENTICATION SECURITY
+# =============================================================================
 
 # Authentication backends with axes for rate limiting
 AUTHENTICATION_BACKENDS = [
@@ -199,7 +219,9 @@ PASSWORD_HASHERS = [
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_AGE = 3600  # 1 hour in seconds
 
+# =============================================================================
 # LOGGING FOR SECURITY EVENTS
+# =============================================================================
 
 LOGGING = {
     'version': 1,
@@ -207,6 +229,10 @@ LOGGING = {
     'formatters': {
         'verbose': {
             'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
             'style': '{',
         },
     },
@@ -223,6 +249,12 @@ LOGGING = {
             'filename': BASE_DIR / 'axes.log',
             'formatter': 'verbose',
         },
+        'https_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'https_redirects.log',
+            'formatter': 'simple',
+        },
     },
     'loggers': {
         'django.security': {
@@ -235,14 +267,57 @@ LOGGING = {
             'level': 'WARNING',
             'propagate': False,
         },
+        'django.request': {
+            'handlers': ['https_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     },
 }
 
+# =============================================================================
 # DEVELOPMENT vs PRODUCTION SETTINGS
+# =============================================================================
 
 if DEBUG:
     # Less strict settings for development
+    ALLOWED_HOSTS = ['*']  # Allow all hosts in development
+    CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000']
+
+    # Disable HTTPS redirects and secure cookies in development
+    SECURE_SSL_REDIRECT = False
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+    SECURE_HSTS_SECONDS = 0
+
+    # Less strict CSP for development
     CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net")
     CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net")
+
     # Allow Django debug toolbar if used
     INTERNAL_IPS = ['127.0.0.1']
+
+    # Add debug toolbar if installed
+    try:
+        import debug_toolbar
+        INSTALLED_APPS += ['debug_toolbar']
+        MIDDLEWARE = ['debug_toolbar.middleware.DebugToolbarMiddleware'] + MIDDLEWARE
+    except ImportError:
+        pass
+else:
+    # Production security settings
+    # Ensure all security settings are enabled in production
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+    # Security: Additional production-only settings
+    SECURE_REDIRECT_EXEMPT = []  # No exemptions from HTTPS redirect
+
+    # Log security configuration at startup
+    import logging
+    logger = logging.getLogger('django.security')
+    logger.info("HTTPS and security settings enabled for production")
