@@ -1,0 +1,125 @@
+{% extends 'bookshelf/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-md-8">
+<div class="card">
+<div class="card-header bg-primary text-white">
+<h2 class="card-title mb-0">{{ title }}</h2>
+</div>
+<div class="card-body">
+<div class="alert alert-info">
+<h5>Security Features Demonstrated:</h5>
+<ul class="mb-0">
+<li>CSRF Token Protection</li>
+<li>Input Validation & Sanitization</li>
+<li>XSS Prevention</li>
+<li>SQL Injection Prevention</li>
+<li>Cross-field Validation</li>
+</ul>
+</div>
+
+<!-- Security: CSRF Token is automatically included when using {% csrf_token %} -->
+<form method="post" novalidate>
+{% csrf_token %}
+
+<!-- Security: Display non-field errors -->
+{% if form.non_field_errors %}
+<div class="alert alert-danger">
+{% for error in form.non_field_errors %}
+{{ error }}
+{% endfor %}
+</div>
+{% endif %}
+
+<!-- Security: Render each form field with proper validation -->
+{% for field in form %}
+<div class="mb-3">
+<label for="{{ field.id_for_label }}" class="form-label">
+{{ field.label }}
+{% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+</label>
+
+{{ field }}
+
+{% if field.help_text %}
+<div class="form-text">{{ field.help_text }}</div>
+{% endif %}
+
+<!-- Security: Display field-specific errors -->
+{% for error in field.errors %}
+<div class="alert alert-danger mt-1">{{ error }}</div>
+{% endfor %}
+</div>
+{% endfor %}
+
+<div class="mt-4">
+<button type="submit" class="btn btn-success">Submit Securely</button>
+<button type="reset" class="btn btn-secondary">Clear Form</button>
+</div>
+</form>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Security: Client-side validation -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+                          const inputs = form.querySelectorAll('input, textarea, select');
+
+                          // Real-time validation
+                          inputs.forEach(input => {
+                              input.addEventListener('blur', function() {
+                                  validateField(this);
+                                                     });
+
+                                         input.addEventListener('input', function() {
+                                                                    // Clear error state when user starts typing
+                                                                    if (this.classList.contains('is-invalid')) {
+                                                                    this.classList.remove('is-invalid');
+                                                                }
+                                                                });
+                                         });
+
+                          function validateField(field) {
+                              // Basic required field validation
+                              if (field.hasAttribute('required') && !field.value.trim()) {
+                                  field.classList.add('is-invalid');
+                          return false;
+                          }
+
+                          // Security: Basic XSS prevention for text inputs
+                          if ((field.type === 'text' || field.type === 'textarea') && field.value) {
+                          const value = field.value.toLowerCase();
+                          if (value.includes('<script>') || value.includes('javascript:') || value.includes('onload=')) {
+                              field.classList.add('is-invalid');
+                          return false;
+                          }
+                          }
+
+                          field.classList.remove('is-invalid');
+                          return true;
+                          }
+
+                          // Form submission validation
+                          form.addEventListener('submit', function(e) {
+                              let isValid = true;
+
+                                                inputs.forEach(input => {
+                                                               if (!validateField(input)) {
+                                                                   isValid = false;
+                                                               }
+                                                               });
+
+                                                if (!isValid) {
+                                                    e.preventDefault();
+                                                                     alert('Please fix the errors before submitting the form.');
+                                                                           }
+                                                                           });
+                                                                           });
+                                                    </script>
+                                                    {% endblock %}
