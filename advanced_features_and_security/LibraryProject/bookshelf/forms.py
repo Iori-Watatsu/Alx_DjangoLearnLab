@@ -14,6 +14,198 @@ from django.utils.html import escape
 import re
 from .models import Book, Post, Comment, CustomUser
 
+class ExampleForm(forms.Form):
+    """
+Example form demonstrating security best practices for ALX task requirements.
+This form shows proper implementation of security measures including:
+- CSRF protection
+- Input validation
+- XSS prevention
+- SQL injection prevention
+"""
+
+    name = forms.CharField(
+        max_length=100,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter your name',
+            'maxlength': '100'
+        }),
+        help_text='Enter your full name (maximum 100 characters).'
+    )
+
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter your email address'
+        }),
+        help_text='We will never share your email with anyone else.'
+    )
+
+    message = forms.CharField(
+        required=True,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 4,
+            'placeholder': 'Enter your message',
+            'maxlength': '1000'
+        }),
+        help_text='Maximum 1000 characters. Your message will be securely processed.'
+    )
+
+    priority = forms.ChoiceField(
+        choices=[
+            ('low', 'Low Priority'),
+            ('medium', 'Medium Priority'),
+            ('high', 'High Priority')
+        ],
+        initial='medium',
+        widget=forms.Select(attrs={
+            'class': 'form-select'
+        })
+    )
+
+    agree_to_terms = forms.BooleanField(
+        required=True,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input'
+        }),
+        label='I agree to the terms and conditions'
+    )
+
+    def clean_name(self):
+        """
+Security: Validate name field to prevent XSS and injection attacks.
+        """
+        name = self.cleaned_data.get('name', '').strip()
+
+        if not name:
+            raise ValidationError("Name is required.")
+
+        # Security: Check for minimum length
+        if len(name) < 2:
+            raise ValidationError("Name must be at least 2 characters long.")
+
+        # Security: Check for XSS patterns
+        xss_patterns = [
+            r'<script.*?>.*?</script>',
+            r'javascript:',
+            r'onload=',
+            r'onerror=',
+            r'onclick=',
+            r'vbscript:',
+        ]
+
+        for pattern in xss_patterns:
+            if re.search(pattern, name, re.IGNORECASE):
+                raise ValidationError("Invalid characters detected in name.")
+
+        # Security: Check for SQL injection patterns
+        sql_patterns = [
+            r'(\bUNION\b|\bSELECT\b|\bINSERT\b|\bDELETE\b|\bUPDATE\b|\bDROP\b|\bEXEC\b)',
+            r'(\-\-|\#|\/\*|\*)',
+            r'(\bOR\b|\bAND\b)\s+\d+=\d+',
+        ]
+
+        for pattern in sql_patterns:
+            if re.search(pattern, name, re.IGNORECASE):
+                raise ValidationError("Invalid input pattern detected.")
+
+        # Security: Only allow letters, spaces, hyphens, and apostrophes
+        if not re.match(r'^[A-Za-z\s\-\'\.]+$', name):
+            raise ValidationError("Name can only contain letters, spaces, hyphens, and apostrophes.")
+
+        # Security: Escape any HTML content to prevent XSS
+        safe_name = escape(name)
+
+        return safe_name
+
+    def clean_email(self):
+        """
+Security: Validate and sanitize email address.
+        """
+        email = self.cleaned_data.get('email', '').lower().strip()
+
+        if not email:
+            raise ValidationError("Email address is required.")
+
+        # Security: Basic email format validation
+        if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+            raise ValidationError("Please enter a valid email address.")
+
+        # Security: Check for disposable email domains (basic example)
+        disposable_domains = ['tempmail.com', 'fake.com', 'example.com']
+        domain = email.split('@')[1] if '@' in email else ''
+        if domain in disposable_domains:
+            raise ValidationError("Please use a permanent email address.")
+
+        return email
+
+    def clean_message(self):
+        """
+Security: Sanitize message content to prevent XSS attacks.
+        """
+        message = self.cleaned_data.get('message', '').strip()
+
+        if not message:
+            raise ValidationError("Message is required.")
+
+        # Security: Check minimum length
+        if len(message) < 10:
+            raise ValidationError("Message must be at least 10 characters long.")
+
+        # Security: Remove potentially dangerous tags
+        dangerous_tags = ['script', 'iframe', 'object', 'embed', 'form']
+
+        for tag in dangerous_tags:
+            # Remove opening tags with attributes
+            message = re.sub(f'<{tag}.*?>', '', message, flags=re.IGNORECASE)
+            # Remove closing tags
+            message = re.sub(f'</{tag}>', '', message, flags=re.IGNORECASE)
+
+        # Security: Remove event handlers
+        event_handlers = ['onload', 'onerror', 'onclick', 'onmouseover', 'onkeypress', 'onSubmit']
+        for handler in event_handlers:
+            message = re.sub(f'{handler}=["\'].*?["\']', '', message, flags=re.IGNORECASE)
+            message = re.sub(f'{handler}=[^\s>]*', '', message, flags=re.IGNORECASE)
+
+        # Security: Escape any remaining HTML that might be dangerous
+        safe_message = escape(message)
+
+        return safe_message
+
+    def clean_agree_to_terms(self):
+        """
+Security: Validate that terms are agreed to.
+        """
+        agree_to_terms = self.cleaned_data.get('agree_to_terms')
+
+        if not agree_to_terms:
+            raise ValidationError("You must agree to the terms and conditions.")
+
+        return agree_to_terms
+
+    def clean(self):
+        """
+Security: Cross-field validation example.
+        """
+        cleaned_data = super().clean()
+        name = cleaned_data.get('name')
+        message = cleaned_data.get('message')
+
+        # Security: Example of cross-field validation
+        if name and message:
+            # Check if name appears in message (basic spam detection)
+            if name.lower() in message.lower():
+                raise ValidationError({
+                    'message': "Please do not include your name in the message body."
+                })
+
+        return cleaned_data
+
+
 class BookForm(forms.ModelForm):
     """
 Secure form for creating and updating Book instances.
