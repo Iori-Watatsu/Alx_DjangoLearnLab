@@ -243,3 +243,42 @@ def dashboard(request):
         'user_posts': user_posts,
         'user_comments': user_comments
     })
+
+# Add this to bookshelf/views.py
+
+from .forms import ExampleForm
+
+def example_form_view(request):
+    """
+View to demonstrate the ExampleForm with security best practices.
+    """
+    if request.method == 'POST':
+        form = ExampleForm(request.POST)
+        if form.is_valid():
+            # Security: Process cleaned and sanitized data
+            name = form.cleaned_data['name']
+            email = form.cleaned_data['email']
+            message = form.cleaned_data['message']
+            priority = form.cleaned_data['priority']
+
+            # Security: Log the form submission (in a real app, you might save to database)
+            print(f"Security: Form submitted by {name} ({email}) with {priority} priority")
+
+            # Security: Success message with sanitized data
+            messages.success(request, f'Thank you {escape(name)}! Your message has been securely processed.')
+            return redirect('bookshelf:example_form_success')
+    else:
+        form = ExampleForm()
+
+    return render(request, 'bookshelf/example_form.html', {
+        'form': form,
+        'title': 'Example Form - Security Demonstration'
+    })
+
+def example_form_success(request):
+    """
+Success page after ExampleForm submission.
+    """
+    return render(request, 'bookshelf/example_form_success.html', {
+        'title': 'Form Submitted Successfully'
+    })
