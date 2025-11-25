@@ -11,6 +11,7 @@ def api_root(request, format=None):
     
     return Response({
         'books': reverse('book-list', request=request, format=format),
+        'message': 'Welcome to the Books API!'
     })
 
 class BookList(generics.ListCreateAPIView):
