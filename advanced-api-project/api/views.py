@@ -5,10 +5,11 @@ from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from .models import Author, Book
 from .serializers import AuthorSerializer, BookSerializer, AuthorSummarySerializer
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny, IsAuthenticatedOrReadOnly
+#from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 
 class BookPagination(PageNumberPagination):
 
