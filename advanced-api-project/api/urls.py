@@ -27,6 +27,11 @@ urlpatterns = [
     path('authors/<int:pk>/delete/', views.AuthorDeleteView.as_view(), name='author-delete'),
     path('books/search/', views.BookSearchView.as_view(), name='book-search'),
     path('books/recent/', views.RecentBooksView.as_view(), name='recent-books'),
+    path('authors/', views.AuthorListView.as_view(), name='author-list'),
+    path('authors/<int:pk>/', views.AuthorDetailView.as_view(), name='author-detail'),
+    path('books/advanced-search/', views.BookAdvancedSearchView.as_view(), name='book-advanced-search'),
+    path('books/recent/', views.RecentBooksView.as_view(), name='recent-books'),
+
 
     path('viewset', include(router.urls)),
 ]
