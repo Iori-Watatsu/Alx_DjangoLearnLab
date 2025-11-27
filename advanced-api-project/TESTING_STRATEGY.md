@@ -3,6 +3,18 @@
 ## Overview
 This document outlines the comprehensive testing strategy for the Django REST Framework API project. The test suite ensures the integrity, security, and functionality of all API endpoints.
 
+## Authentication Methods Tested
+
+### 1. Token Authentication
+- Uses `self.client.credentials()` with token headers
+- Tests API key-based authentication
+- Covers token creation and validation
+
+### 2. Session Authentication
+- Uses `self.client.login()` and `self.client.logout()`
+- Tests Django's built-in session authentication
+- Verifies login/logout functionality
+
 ## Test Structure
 
 ### Test Files
@@ -24,6 +36,7 @@ This document outlines the comprehensive testing strategy for the Django REST Fr
 
 #### 3. Authentication and Permissions
 - **Token Authentication**: Test access with valid/invalid tokens
+- **Session Authentication**: Test login/logout functionality
 - **Permission Levels**: Test public, authenticated, and admin-only endpoints
 - **Access Control**: Verify proper restriction of unauthorized access
 
@@ -75,6 +88,39 @@ coverage run manage.py test api
 coverage report
 coverage html  # Generate HTML report
 
+Authentication Testing
+Session Authentication Tests
+
+The test suite now includes comprehensive session authentication testing using self.client.login():
+python
+
+def test_session_authentication(self):
+    # Test login functionality
+    login_success = self.client.login(username='testuser', password='testpass123')
+    self.assertTrue(login_success)
+
+    # Test protected endpoint after login
+    response = self.client.post(url, data, format='json')
+    self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    # Test logout functionality
+    self.client.logout()
+    response = self.client.post(url, data, format='json')
+    self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+Token Authentication Tests
+
+Also includes token authentication for API clients:
+python
+
+def test_token_authentication(self):
+    # Set token in headers
+    self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.regular_token.key}')
+
+    # Test protected endpoint with token
+    response = self.client.post(url, data, format='json')
+    self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
 Test Data Setup
 Base Test Case (BaseAPITestCase)
 
@@ -82,7 +128,19 @@ Base Test Case (BaseAPITestCase)
 
     Creates sample authors and books for testing
 
-    Provides helper methods for authentication
+    Provides helper methods for both token and session authentication
+
+Authentication Helper Methods
+
+    authenticate_regular_user(): Token authentication for regular user
+
+    authenticate_admin_user(): Token authentication for admin user
+
+    login_regular_user(): Session authentication for regular user
+
+    login_admin_user(): Session authentication for admin user
+
+    remove_authentication(): Remove all authentication
 
 Test Data Includes
 
@@ -92,37 +150,51 @@ Test Data Includes
 
     Authentication tokens for different user roles
 
+    User credentials for session authentication
+
 Test Examples
-Successful API Call
+Session Authentication Test
 python
 
-def test_list_books_authenticated(self):
+def test_create_book_authenticated_session(self):
+    # Login using session authentication
+    login_success = self.login_regular_user()
+    self.assertTrue(login_success)
+
+    # Perform authenticated action
+    url = reverse('api:book-create')
+    data = {'title': 'New Book', 'author': self.author1.id}
+    response = self.client.post(url, data, format='json')
+
+    self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+Token Authentication Test
+python
+
+def test_create_book_authenticated_token(self):
+    # Authenticate using token
     self.authenticate_regular_user()
-    url = reverse('api:book-list')
-    response = self.client.get(url)
 
-    self.assertEqual(response.status_code, status.HTTP_200_OK)
-    self.assertEqual(len(response.data['results']), 5)
+    # Perform authenticated action
+    url = reverse('api:book-create')
+    data = {'title': 'New Book', 'author': self.author1.id}
+    response = self.client.post(url, data, format='json')
 
-Authentication Test
+    self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+Authentication Failure Test
 python
 
 def test_create_book_unauthenticated(self):
+    # Ensure no authentication
+    self.remove_authentication()
+
+    # Attempt protected action without auth
     url = reverse('api:book-create')
     data = {'title': 'New Book', 'author': self.author1.id}
     response = self.client.post(url, data, format='json')
 
     self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-Filtering Test
-python
-
-def test_filter_by_author(self):
-    url = reverse('api:book-list')
-    response = self.client.get(url, {'author': self.author1.id})
-
-    self.assertEqual(response.status_code, status.HTTP_200_OK)
-    self.assertEqual(len(response.data['results']), 2)
 
 Interpreting Test Results
 Successful Tests
@@ -174,6 +246,14 @@ Test Isolation
 
     Clean up after tests automatically
 
+Authentication Testing
+
+    Test both success and failure cases
+
+    Verify different authentication methods
+
+    Test permission levels thoroughly
+
 Assertion Patterns
 
     Test one behavior per test method
@@ -192,30 +272,15 @@ Maintainability
 
 Continuous Integration
 
-These tests can be integrated into CI/CD pipelines to ensure code quality with every commit. The test suite runs quickly and provides comprehensive coverage of API functionality.
+These tests can be integrated into CI/CD pipelines to ensure code quality with every commit. The test suite runs quickly and provides comprehensive coverage of API functionality including both authentication methods.
 text
 
 
-## Step 3: Update Settings for Testing
+## Step 3: Run the Updated Tests
 
-**File: `advanced_api_project/settings.py`** - Add test-specific settings
+Let's execute the updated test suite with session authentication:
 
-```python
-# Add to existing settings.py
-# Test settings
-TEST_RUNNER = 'django.test.runner.DiscoverRunner'
-
-# During testing, use a faster password hasher
-if 'test' in sys.argv:
-    PASSWORD_HASHERS = [
-        'django.contrib.auth.hashers.MD5PasswordHasher',
-    ]
-
-Step 4: Run the Tests
-
-Let's execute the comprehensive test suite:
-bash
-
+```bash
 # Make sure you're in the advanced-api-project directory
 cd advanced-api-project
 
@@ -225,35 +290,9 @@ venv\Scripts\activate
 # On macOS/Linux:
 source venv/bin/activate
 
-# Install required packages if not already installed
-pip install coverage
-
-# Run all tests
+# Run all tests including the new session authentication tests
 python manage.py test api --verbosity=2
 
-# Run with coverage report
-coverage run manage.py test api
-coverage report
-
-Step 5: Expected Test Output
-
-When you run the tests, you should see output like:
-text
-
-Creating test database for alias 'default'...
-System check identified no issues (0 silenced).
-test_authenticated_access (api.tests_views.AuthenticationPermissionTests) ... ok
-test_create_book_authenticated (api.tests_views.BookCRUDTests) ... ok
-test_create_book_invalid_data (api.tests_views.BookCRUDTests) ... ok
-test_create_book_unauthenticated (api.tests_views.BookCRUDTests) ... ok
-test_delete_book_as_admin (api.tests_views.BookCRUDTests) ... ok
-test_delete_book_as_regular_user (api.tests_views.BookCRUDTests) ... ok
-test_delete_book_unauthenticated (api.tests_views.BookCRUDTests) ... ok
-...
-----------------------------------------------------------------------
-Ran 45 tests in 2.345s
-
-OK
-Destroying test database for alias 'default'...
-
+# Run specific session authentication tests
+python manage.py test api.tests_views.AuthenticationPermissionTests --verbosity=2
 
