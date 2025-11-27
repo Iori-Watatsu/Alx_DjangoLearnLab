@@ -11,6 +11,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from django.db.models import Q
+from django_filters import rest_framework
 
 class BookPagination(PageNumberPagination):
 
