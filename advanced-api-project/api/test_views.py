@@ -77,27 +77,37 @@ Creates test users, authors, books, and authentication tokens.
         self.client = APIClient()
 
     def authenticate_regular_user(self):
-        """Helper method to authenticate as regular user."""
+        """Helper method to authenticate as regular user using token."""
         self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.regular_token.key}')
 
     def authenticate_admin_user(self):
-        """Helper method to authenticate as admin user."""
+        """Helper method to authenticate as admin user using token."""
         self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.admin_token.key}')
+
+    def login_regular_user(self):
+        """Helper method to login as regular user using session authentication."""
+        return self.client.login(username='testuser', password='testpass123')
+
+    def login_admin_user(self):
+        """Helper method to login as admin user using session authentication."""
+        return self.client.login(username='adminuser', password='adminpass123')
 
     def remove_authentication(self):
         """Helper method to remove authentication."""
         self.client.credentials()
+        self.client.logout()
 
 
 class BookCRUDTests(BaseAPITestCase):
     """
 Test CRUD operations for Book model endpoints.
 Covers Create, Read, Update, Delete operations with proper authentication.
+Tests both token authentication and session authentication.
 """
 
-    def test_list_books_authenticated(self):
+    def test_list_books_authenticated_token(self):
         """
-Test retrieving book list as authenticated user.
+Test retrieving book list as authenticated user using token auth.
 Should return 200 OK with all books.
         """
         self.authenticate_regular_user()
@@ -108,6 +118,20 @@ Should return 200 OK with all books.
         self.assertEqual(len(response.data['results']), 5)
         self.assertIn('title', response.data['results'][0])
         self.assertIn('author', response.data['results'][0])
+
+    def test_list_books_authenticated_session(self):
+        """
+Test retrieving book list as authenticated user using session auth.
+Should return 200 OK with all books.
+        """
+        login_success = self.login_regular_user()
+        self.assertTrue(login_success)  # Verify login was successful
+
+        url = reverse('api:book-list')
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 5)
 
     def test_list_books_unauthenticated(self):
         """
@@ -135,9 +159,9 @@ Should return 200 OK with correct book data.
         self.assertEqual(response.data['author'], self.author1.id)
         self.assertEqual(response.data['publication_year'], 1949)
 
-    def test_create_book_authenticated(self):
+    def test_create_book_authenticated_token(self):
         """
-Test creating a new book as authenticated user.
+Test creating a new book as authenticated user using token auth.
 Should return 201 CREATED with new book data.
         """
         self.authenticate_regular_user()
@@ -152,6 +176,27 @@ Should return 201 CREATED with new book data.
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['book']['title'], 'New Test Book')
+        self.assertEqual(Book.objects.count(), 6)  # 5 initial + 1 new
+
+    def test_create_book_authenticated_session(self):
+        """
+Test creating a new book as authenticated user using session auth.
+Should return 201 CREATED with new book data.
+        """
+        login_success = self.login_regular_user()
+        self.assertTrue(login_success)
+
+        url = reverse('api:book-create')
+        data = {
+            'title': 'New Test Book Session',
+            'author': self.author3.id,
+            'publication_year': 2024,
+            'isbn': '1234567890456'
+        }
+        response = self.client.post(url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['book']['title'], 'New Test Book Session')
         self.assertEqual(Book.objects.count(), 6)  # 5 initial + 1 new
 
     def test_create_book_unauthenticated(self):
@@ -188,9 +233,9 @@ Should return 400 BAD REQUEST with validation errors.
         self.assertIn('title', response.data)
         self.assertIn('publication_year', response.data)
 
-    def test_update_book_authenticated(self):
+    def test_update_book_authenticated_token(self):
         """
-Test updating a book as authenticated user.
+Test updating a book as authenticated user using token auth.
 Should return 200 OK with updated data.
         """
         self.authenticate_regular_user()
@@ -209,6 +254,29 @@ Should return 200 OK with updated data.
         self.book1.refresh_from_db()
         self.assertEqual(self.book1.title, '1984 - Updated')
 
+    def test_update_book_authenticated_session(self):
+        """
+Test updating a book as authenticated user using session auth.
+Should return 200 OK with updated data.
+        """
+        login_success = self.login_regular_user()
+        self.assertTrue(login_success)
+
+        url = reverse('api:book-update', args=[self.book1.id])
+        data = {
+            'title': '1984 - Session Updated',
+            'author': self.author1.id,
+            'publication_year': 1949
+        }
+        response = self.client.put(url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['book']['title'], '1984 - Session Updated')
+
+        # Verify the book was actually updated in database
+        self.book1.refresh_from_db()
+        self.assertEqual(self.book1.title, '1984 - Session Updated')
+
     def test_update_book_unauthenticated(self):
         """
 Test updating a book without authentication.
@@ -221,9 +289,9 @@ Should return 401 UNAUTHORIZED.
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_delete_book_as_admin(self):
+    def test_delete_book_as_admin_token(self):
         """
-Test deleting a book as admin user.
+Test deleting a book as admin user using token auth.
 Should return 200 OK with success message.
         """
         self.authenticate_admin_user()
@@ -234,12 +302,40 @@ Should return 200 OK with success message.
         self.assertIn('successfully deleted', response.data['message'])
         self.assertEqual(Book.objects.count(), 4)  # 5 initial - 1 deleted
 
-    def test_delete_book_as_regular_user(self):
+    def test_delete_book_as_admin_session(self):
         """
-Test deleting a book as regular user (non-admin).
+Test deleting a book as admin user using session auth.
+Should return 200 OK with success message.
+        """
+        login_success = self.login_admin_user()
+        self.assertTrue(login_success)
+
+        url = reverse('api:book-delete', args=[self.book1.id])
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('successfully deleted', response.data['message'])
+        self.assertEqual(Book.objects.count(), 4)  # 5 initial - 1 deleted
+
+    def test_delete_book_as_regular_user_token(self):
+        """
+Test deleting a book as regular user (non-admin) using token auth.
 Should return 403 FORBIDDEN.
         """
         self.authenticate_regular_user()
+        url = reverse('api:book-delete', args=[self.book1.id])
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_delete_book_as_regular_user_session(self):
+        """
+Test deleting a book as regular user (non-admin) using session auth.
+Should return 403 FORBIDDEN.
+        """
+        login_success = self.login_regular_user()
+        self.assertTrue(login_success)
+
         url = reverse('api:book-delete', args=[self.book1.id])
         response = self.client.delete(url)
 
@@ -494,9 +590,9 @@ Should return 200 OK with author data and books.
         self.assertEqual(response.data['name'], 'George Orwell')
         self.assertEqual(len(response.data['books']), 2)  # 2 books by Orwell
 
-    def test_create_author_authenticated(self):
+    def test_create_author_authenticated_token(self):
         """
-Test creating a new author as authenticated user.
+Test creating a new author as authenticated user using token auth.
 Should return 201 CREATED.
         """
         self.authenticate_regular_user()
@@ -506,6 +602,22 @@ Should return 201 CREATED.
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['author']['name'], 'New Test Author')
+        self.assertEqual(Author.objects.count(), 4)  # 3 initial + 1 new
+
+    def test_create_author_authenticated_session(self):
+        """
+Test creating a new author as authenticated user using session auth.
+Should return 201 CREATED.
+        """
+        login_success = self.login_regular_user()
+        self.assertTrue(login_success)
+
+        url = reverse('api:author-create')
+        data = {'name': 'New Test Author Session'}
+        response = self.client.post(url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['author']['name'], 'New Test Author Session')
         self.assertEqual(Author.objects.count(), 4)  # 3 initial + 1 new
 
     def test_create_author_unauthenticated(self):
@@ -520,9 +632,9 @@ Should return 401 UNAUTHORIZED.
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_update_author_authenticated(self):
+    def test_update_author_authenticated_token(self):
         """
-Test updating author as authenticated user.
+Test updating author as authenticated user using token auth.
 Should return 200 OK.
         """
         self.authenticate_regular_user()
@@ -534,12 +646,42 @@ Should return 200 OK.
         self.author1.refresh_from_db()
         self.assertEqual(self.author1.name, 'George Orwell - Updated')
 
-    def test_delete_author_as_admin(self):
+    def test_update_author_authenticated_session(self):
         """
-Test deleting author as admin user.
+Test updating author as authenticated user using session auth.
+Should return 200 OK.
+        """
+        login_success = self.login_regular_user()
+        self.assertTrue(login_success)
+
+        url = reverse('api:author-update', args=[self.author1.id])
+        data = {'name': 'George Orwell - Session Updated'}
+        response = self.client.put(url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.author1.refresh_from_db()
+        self.assertEqual(self.author1.name, 'George Orwell - Session Updated')
+
+    def test_delete_author_as_admin_token(self):
+        """
+Test deleting author as admin user using token auth.
 Should return 200 OK.
         """
         self.authenticate_admin_user()
+        url = reverse('api:author-delete', args=[self.author1.id])
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Author.objects.count(), 2)  # 3 initial - 1 deleted
+
+    def test_delete_author_as_admin_session(self):
+        """
+Test deleting author as admin user using session auth.
+Should return 200 OK.
+        """
+        login_success = self.login_admin_user()
+        self.assertTrue(login_success)
+
         url = reverse('api:author-delete', args=[self.author1.id])
         response = self.client.delete(url)
 
@@ -564,6 +706,7 @@ class AuthenticationPermissionTests(BaseAPITestCase):
     """
 Test authentication and permission mechanisms.
 Verifies proper access control for different user roles.
+Tests both token authentication and session authentication.
 """
 
     def test_token_authentication(self):
@@ -583,9 +726,47 @@ Should allow access with valid token.
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    def test_admin_only_endpoints(self):
+    def test_session_authentication(self):
         """
-Test that admin-only endpoints reject non-admin users.
+Test session-based authentication using self.client.login.
+Should allow access after successful login.
+        """
+        url = reverse('api:book-create')
+        data = {'title': 'Test Book Session', 'author': self.author1.id, 'publication_year': 2024}
+
+        # Without login - should be unauthorized
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # With successful login - should be authorized
+        login_success = self.client.login(username='testuser', password='testpass123')
+        self.assertTrue(login_success)
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_session_logout(self):
+        """
+Test that logout prevents access to protected endpoints.
+        """
+        # First login and verify access
+        login_success = self.client.login(username='testuser', password='testpass123')
+        self.assertTrue(login_success)
+
+        url = reverse('api:book-create')
+        data = {'title': 'Test Book', 'author': self.author1.id, 'publication_year': 2024}
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # Now logout and verify access is denied
+        self.client.logout()
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_admin_only_endpoints_token(self):
+        """
+Test that admin-only endpoints reject non-admin users using token auth.
         """
         url = reverse('api:book-delete', args=[self.book1.id])
 
@@ -596,6 +777,25 @@ Test that admin-only endpoints reject non-admin users.
 
         # Admin user - should be allowed
         self.authenticate_admin_user()
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_admin_only_endpoints_session(self):
+        """
+Test that admin-only endpoints reject non-admin users using session auth.
+        """
+        url = reverse('api:book-delete', args=[self.book1.id])
+
+        # Regular user - should be forbidden
+        login_success = self.client.login(username='testuser', password='testpass123')
+        self.assertTrue(login_success)
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        # Admin user - should be allowed
+        self.client.logout()  # Logout regular user first
+        admin_login_success = self.client.login(username='adminuser', password='adminpass123')
+        self.assertTrue(admin_login_success)
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
