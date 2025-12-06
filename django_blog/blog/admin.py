@@ -109,3 +109,12 @@ class LikeAdmin(admin.ModelAdmin):
     list_filter = ['created_at']
     search_fields = ['user__username', 'post__title']
     readonly_fields = ['created_at']
+
+@admin.register(Post)
+class PostAdmin(admin.ModelAdmin):
+    list_display = ('title', 'author', 'date_posted', 'date_updated')
+    list_filter = ('date_posted', 'author')
+    search_fields = ('title', 'content', 'author__username')
+    prepopulated_fields = {'slug': ('title',)}  # Optional: if you add a slug field
+    date_hierarchy = 'date_posted'
+    ordering = ('-date_posted',)

@@ -181,3 +181,23 @@ Post likes by users.
 
     def __str__(self):
         return f"{self.user} likes {self.post.title}"
+
+    class Post(models.Model):
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    date_posted = models.DateTimeField(default=timezone.now)
+    date_updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
+
+    def get_absolute_url(self):
+        return reverse('post-detail', kwargs={'pk': self.pk})
+
+    def excerpt(self):
+        """Return first 100 characters as excerpt"""
+        return self.content[:100] + '...' if len(self.content) > 100 else self.content
+
+    class Meta:
+        ordering = ['-date_posted']
