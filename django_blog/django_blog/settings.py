@@ -35,8 +35,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'taggit'
-    'blog'
+    'taggit',
+    'blog',
 
     # Local apps
     'blog.apps.BlogConfig',  # Register the blog app

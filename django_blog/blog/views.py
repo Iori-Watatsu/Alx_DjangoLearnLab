@@ -196,3 +196,40 @@ def tag_list(request):
 
     return render(request, 'blog/tag_list.html', {'tags': tags})
 
+# blog/views.py (update form_valid methods for PostCreateView and PostUpdateView)
+class PostCreateView(LoginRequiredMixin, CreateView):
+    model = Post
+    form_class = PostForm
+    template_name = 'blog/post_form.html'
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+
+        # Save tags from the form
+        tags_input = form.cleaned_data.get('tags', '')
+        if tags_input:
+            tag_list = [tag.strip() for tag in tags_input.split(',') if tag.strip()]
+            for tag in tag_list:
+                self.object.tags.add(tag)
+
+        messages.success(self.request, 'Post created successfully!')
+        return response
+
+class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Post
+    form_class = PostForm
+    template_name = 'blog/post_form.html'
+
+    def form_valid(self, form):
+        # Clear existing tags
+        self.object.tags.clear()
+
+        # Save tags from the form
+        tags_input = form.cleaned_data.get('tags', '')
+        if tags_input:
+            tag_list = [tag.strip() for tag in tags_input.split(',') if tag.strip()]
+            for tag in tag_list:
+                self.object.tags.add(tag)
+
+        messages.success(self.request, 'Post updated successfully!')
+        return super().form_valid(form)
