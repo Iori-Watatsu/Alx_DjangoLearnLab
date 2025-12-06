@@ -186,3 +186,12 @@ TEMPLATES = [
         },
     },
 ]
+
+# Static files
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+
+# Authentication settings
+LOGIN_REDIRECT_URL = '/profile/'
+LOGIN_URL = '/login/'
+
