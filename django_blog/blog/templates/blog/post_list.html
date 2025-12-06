@@ -268,6 +268,8 @@
                     {% csrf_token %}
                     <a href="#" onclick="this.parentNode.submit(); return false;">Logout</a>
                 </form>
+                <a href="{% url 'post-update' post.pk %}" class="btn-edit">Edit</a>
+                <a href="{% url 'post-delete' post.pk %}" class="btn-danger">Delete</a>
             {% else %}
                 <a href="{% url 'login' %}">Login</a>
                 <a href="{% url 'register' %}">Register</a>
