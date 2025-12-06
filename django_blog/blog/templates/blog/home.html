@@ -343,6 +343,12 @@
         {% endif %}
     </div>
 
+    <div class="post-meta">
+        <span>By {{ post.author.username }}</span>
+        <span>{{ post.date_posted|date:"M d, Y" }}</span>
+        <span>{{ post.comment_count }} comment{{ post.comment_count|pluralize }}</span>
+    </div>
+
     <footer class="footer">
         <p>&copy; 2024 Django Blog. All rights reserved.</p>
     </footer>

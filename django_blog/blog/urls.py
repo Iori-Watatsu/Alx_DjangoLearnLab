@@ -55,6 +55,11 @@ urlpatterns = [
     path('post/<int:pk>/update/', PostUpdateView.as_view(), name='post-update'),
     path('posts/new/', PostCreateView.as_view(), name='post-create'),
     
+    # Comment URLs (as specified in requirements)
+    path('posts/<int:pk>/comments/new/', views.add_comment, name='add-comment'),
+    path('comments/<int:pk>/edit/', CommentUpdateView.as_view(), name='comment-update'),
+    path('comments/<int:pk>/delete/', CommentDeleteView.as_view(), name='comment-delete'),
+
     # Home page (can be post list or custom home)
     path('', PostListView.as_view(), name='home'),
 ]

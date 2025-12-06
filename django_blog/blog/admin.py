@@ -118,3 +118,18 @@ class PostAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('title',)}  # Optional: if you add a slug field
     date_hierarchy = 'date_posted'
     ordering = ('-date_posted',)
+
+
+@admin.register(Post)
+class PostAdmin(admin.ModelAdmin):
+    list_display = ('title', 'author', 'date_posted', 'comment_count')
+    list_filter = ('date_posted', 'author')
+    search_fields = ('title', 'content')
+    date_hierarchy = 'date_posted'
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ('author', 'post', 'created_at', 'updated_at')
+    list_filter = ('created_at', 'author')
+    search_fields = ('content', 'author__username', 'post__title')
+    date_hierarchy = 'created_at'

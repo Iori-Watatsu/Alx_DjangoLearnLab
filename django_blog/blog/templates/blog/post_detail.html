@@ -6,183 +6,139 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ post.title }} - Django Blog</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        /* Previous styles remain the same, adding comment styles below */
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background-color: #f8f9fa;
-        }
-
-        .navbar {
-            background: #fff;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .navbar-brand {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #007bff;
-            text-decoration: none;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 1.5rem;
-            align-items: center;
-        }
-
-        .nav-links a {
-            color: #555;
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            transition: all 0.3s;
-        }
-
-        .nav-links a:hover {
-            background-color: #f0f0f0;
-            color: #007bff;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 0 1rem;
-        }
-
-        .post-detail {
-            background: white;
-            border-radius: 10px;
-            padding: 2.5rem;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
-            margin-bottom: 2rem;
-        }
-
-        .post-title {
-            font-size: 2rem;
-            color: #333;
-            margin-bottom: 1rem;
-            line-height: 1.3;
-        }
-
-        .post-meta {
-            color: #666;
-            font-size: 0.95rem;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .post-author {
-            font-weight: 600;
-            color: #555;
-        }
-
-        .post-content {
-            color: #444;
-            line-height: 1.8;
-            font-size: 1.1rem;
-            margin-bottom: 2rem;
-        }
-
-        .post-content p {
-            margin-bottom: 1.5rem;
-        }
-
-        .post-actions {
-            display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
-            padding-top: 1.5rem;
+        .comments-section {
+            margin-top: 3rem;
+            padding-top: 2rem;
             border-top: 1px solid #eee;
         }
 
-        .btn-edit {
-            background-color: #28a745;
-            color: white;
-            padding: 0.6rem 1.2rem;
-            border-radius: 4px;
-            text-decoration: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-
-        .btn-delete {
-            background-color: #dc3545;
-            color: white;
-            padding: 0.6rem 1.2rem;
-            border-radius: 4px;
-            text-decoration: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-
-        .btn-back {
-            background-color: #6c757d;
-            color: white;
-            padding: 0.6rem 1.2rem;
-            border-radius: 4px;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .messages {
+        .comments-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 2rem;
         }
 
-        .alert {
-            padding: 1rem;
-            border-radius: 4px;
+        .comments-title {
+            font-size: 1.5rem;
+            color: #333;
+        }
+
+        .comment-count {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .comment-form-container {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .comment-form-title {
+            font-size: 1.2rem;
             margin-bottom: 1rem;
-            border: 1px solid transparent;
+            color: #333;
         }
 
-        .alert-success {
-            background-color: #d4edda;
-            border-color: #c3e6cb;
-            color: #155724;
+        .comments-list {
+            margin-top: 2rem;
         }
 
-        @media (max-width: 768px) {
-            .navbar {
-                flex-direction: column;
-                gap: 1rem;
-            }
+        .comment-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+            border-left: 4px solid #007bff;
+        }
 
-            .nav-links {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
 
-            .post-detail {
-                padding: 1.5rem;
-            }
+        .comment-author {
+            font-weight: 600;
+            color: #333;
+        }
 
-            .post-title {
-                font-size: 1.5rem;
-            }
+        .comment-date {
+            color: #666;
+            font-size: 0.9rem;
+        }
 
-            .post-actions {
-                flex-direction: column;
-            }
+        .comment-content {
+            color: #444;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .comment-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+
+        .btn-edit-comment {
+            background-color: #28a745;
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .btn-delete-comment {
+            background-color: #dc3545;
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .no-comments {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .comment-login-prompt {
+            text-align: center;
+            padding: 1.5rem;
+            background: #e3f2fd;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .comment-login-prompt a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .comment-login-prompt a:hover {
+            text-decoration: underline;
+        }
+
+        .updated-badge {
+            background: #ffc107;
+            color: #856404;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
         }
     </style>
 </head>
@@ -237,6 +193,75 @@
                 <a href="{% url 'post-delete' post.pk %}" class="btn-delete">Delete Post</a>
             </div>
             {% endif %}
+        </div>
+
+        <!-- Comments Section -->
+        <div class="comments-section">
+            <div class="comments-header">
+                <h2 class="comments-title">Comments</h2>
+                <span class="comment-count">{{ post.comment_count }} comment{{ post.comment_count|pluralize }}</span>
+            </div>
+
+            <!-- Comment Form -->
+            {% if user.is_authenticated %}
+            <div class="comment-form-container">
+                <h3 class="comment-form-title">Add a Comment</h3>
+                <form method="post" action="{% url 'add-comment' post.pk %}">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        {{ comment_form.content }}
+                        {% if comment_form.content.errors %}
+                        <div class="errorlist">
+                            {% for error in comment_form.content.errors %}
+                            <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <button type="submit" class="btn-primary" style="margin-top: 1rem;">Post Comment</button>
+                </form>
+            </div>
+            {% else %}
+            <div class="comment-login-prompt">
+                <p>Please <a href="{% url 'login' %}">login</a> to leave a comment.</p>
+            </div>
+            {% endif %}
+
+            <!-- Comments List -->
+            <div class="comments-list">
+                {% if comments %}
+                    {% for comment in comments %}
+                    <div class="comment-card">
+                        <div class="comment-header">
+                            <div>
+                                <span class="comment-author">{{ comment.author.username }}</span>
+                                <span class="comment-date">
+                                    • {{ comment.created_at|date:"F d, Y" }}
+                                    {% if comment.updated_at > comment.created_at %}
+                                    <span class="updated-badge">Edited</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="comment-content">
+                            {{ comment.content|linebreaks }}
+                        </div>
+
+                        {% if user.is_authenticated and user == comment.author %}
+                        <div class="comment-actions">
+                            <a href="{% url 'comment-update' comment.pk %}" class="btn-edit-comment">Edit</a>
+                            <a href="{% url 'comment-delete' comment.pk %}" class="btn-delete-comment">Delete</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="no-comments">
+                    <p>No comments yet. Be the first to share your thoughts!</p>
+                </div>
+                {% endif %}
+            </div>
         </div>
 
         <div style="text-align: center; margin-top: 2rem;">

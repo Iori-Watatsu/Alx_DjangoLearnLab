@@ -17,6 +17,8 @@ from django.views.generic import (
 from .models import Post
 from .forms import PostForm
 from django.urls import reverse_lazy
+from .models import Comment, Post
+from .forms import CommentForm
 
 @csrf_protect
 def register_view(request):
@@ -145,3 +147,69 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 def post_list(request):
     posts = Post.objects.all().order_by('-date_posted')
     return render(request, 'blog/post_list.html', {'posts': posts})
+
+# Add comment view
+@login_required
+def add_comment(request, pk):
+    post = get_object_or_404(Post, pk=pk)
+
+    if request.method == 'POST':
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.post = post
+            comment.author = request.user
+            comment.save()
+            messages.success(request, 'Your comment has been added successfully!')
+            return redirect('post-detail', pk=post.pk)
+    else:
+        form = CommentForm()
+
+    return render(request, 'blog/post_detail.html', {
+        'post': post,
+        'form': form
+    })
+
+# Update comment view (class-based)
+class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Comment
+    form_class = CommentForm
+    template_name = 'blog/comment_form.html'
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Your comment has been updated successfully!')
+        return super().form_valid(form)
+
+    def test_func(self):
+        comment = self.get_object()
+        return self.request.user == comment.author
+
+    def get_success_url(self):
+        return reverse_lazy('post-detail', kwargs={'pk': self.object.post.pk})
+
+# Delete comment view (class-based)
+class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Comment
+    template_name = 'blog/comment_confirm_delete.html'
+
+    def test_func(self):
+        comment = self.get_object()
+        return self.request.user == comment.author
+
+    def get_success_url(self):
+        return reverse_lazy('post-detail', kwargs={'pk': self.object.post.pk})
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Your comment has been deleted successfully!')
+        return super().delete(request, *args, **kwargs)
+
+# Update PostDetailView to include comments
+class PostDetailView(DetailView):
+    model = Post
+    template_name = 'blog/post_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['comments'] = self.object.comments.all()
+        context['comment_form'] = CommentForm()
+        return context
