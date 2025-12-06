@@ -271,6 +271,37 @@
         <form method="post" action="{% url 'comment-create' post.pk %}">
             {% csrf_token %}
         </form>
+
+        {% if user.is_authenticated %}
+        <div class="comment-form-container">
+            <h3 class="comment-form-title">Add a Comment</h3>
+            <form method="post" action="{% url 'comment-create' post.pk %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    {{ comment_form.content }}
+                    {% if comment_form.content.errors %}
+                    <div class="errorlist">
+                        {% for error in comment_form.content.errors %}
+                        <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <button type="submit" class="btn-primary" style="margin-top: 1rem;">Post Comment</button>
+            </form>
+        </div>
+        {% else %}
+        <div class="comment-login-prompt">
+            <p>Please <a href="{% url 'login' %}">login</a> to leave a comment.</p>
+        </div>
+        {% endif %}
     </div>
+
+    {% if user.is_authenticated and user == comment.author %}
+    <div class="comment-actions">
+        <a href="{% url 'comment-update' comment.pk %}" class="btn-edit-comment">Edit</a>
+        <a href="{% url 'comment-delete' comment.pk %}" class="btn-delete-comment">Delete</a>
+    </div>
+    {% endif %}
 </body>
 </html>
