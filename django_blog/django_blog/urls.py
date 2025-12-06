@@ -32,6 +32,9 @@ urlpatterns = [
     path('password-reset-complete/', auth_views.PasswordResetCompleteView.as_view(
              template_name='blog/password_reset_complete.html'
          ), name='password_reset_complete'),
+    path('admin/', admin.site.urls),
+    path('', include('blog.urls')),
+    path('accounts/login/', auth_views.LoginView.as_view(template_name='blog/login.html'), name='login'),
 ]
 
 # Serve static and media files during development
