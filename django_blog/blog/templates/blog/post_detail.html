@@ -267,6 +267,10 @@
         <div style="text-align: center; margin-top: 2rem;">
             <a href="{% url 'post-list' %}" class="btn-back">← Back to All Posts</a>
         </div>
+
+        <form method="post" action="{% url 'comment-create' post.pk %}">
+            {% csrf_token %}
+        </form>
     </div>
 </body>
 </html>

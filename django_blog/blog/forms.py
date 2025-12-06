@@ -1,26 +1,21 @@
-# blog/forms.py
-from django import forms
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm
-from django.contrib.auth.models import User
 
+from django import forms
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
+from .models import Post, Comment
+
+# Custom User Creation Form
 class CustomUserCreationForm(UserCreationForm):
-    email = forms.EmailField(
-        required=True,
-        widget=forms.EmailInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Email Address'
-        })
-    )
+    email = forms.EmailField(required=True)
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'password1', 'password2')
+        fields = ['username', 'email', 'password1', 'password2']
 
     def __init__(self, *args, **kwargs):
-        super(CustomUserCreationForm, self).__init__(*args, **kwargs)
-        self.fields['username'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Username'})
-        self.fields['password1'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Password'})
-        self.fields['password2'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Confirm Password'})
+        super().__init__(*args, **kwargs)
+        for field_name in self.fields:
+            self.fields[field_name].widget.attrs.update({'class': 'form-control'})
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
@@ -28,6 +23,7 @@ class CustomUserCreationForm(UserCreationForm):
             raise forms.ValidationError("This email is already registered.")
         return email
 
+# Profile Update Form
 class ProfileUpdateForm(forms.ModelForm):
     email = forms.EmailField(required=True)
 
@@ -36,9 +32,9 @@ class ProfileUpdateForm(forms.ModelForm):
         fields = ['username', 'email', 'first_name', 'last_name']
 
     def __init__(self, *args, **kwargs):
-        super(ProfileUpdateForm, self).__init__(*args, **kwargs)
-        for field in self.fields:
-            self.fields[field].widget.attrs.update({'class': 'form-control'})
+        super().__init__(*args, **kwargs)
+        for field_name in self.fields:
+            self.fields[field_name].widget.attrs.update({'class': 'form-control'})
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
@@ -46,6 +42,7 @@ class ProfileUpdateForm(forms.ModelForm):
             raise forms.ValidationError("This email is already in use.")
         return email
 
+# Post Form
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
@@ -62,11 +59,8 @@ class PostForm(forms.ModelForm):
             })
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['content'].label = "Content"
-
-        class CommentForm(forms.ModelForm):
+# Comment Form
+class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
         fields = ['content']
@@ -80,7 +74,3 @@ class PostForm(forms.ModelForm):
         labels = {
             'content': ''
         }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['content'].widget.attrs.update({'class': 'form-control'})
