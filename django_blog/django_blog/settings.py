@@ -35,6 +35,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'taggit'
+    'blog'
 
     # Local apps
     'blog.apps.BlogConfig',  # Register the blog app
@@ -195,3 +197,7 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 LOGIN_REDIRECT_URL = '/profile/'
 LOGIN_URL = '/login/'
 
+# Taggit settings
+TAGGIT_CASE_INSENSITIVE = True
+TAGGIT_TAGS_FROM_STRING = 'taggit.utils.split_strip'
+TAGGIT_STRING_FROM_TAGS = 'taggit.utils.join_strip'

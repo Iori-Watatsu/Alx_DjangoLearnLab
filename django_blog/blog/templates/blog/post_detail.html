@@ -303,5 +303,18 @@
         <a href="{% url 'comment-delete' comment.pk %}" class="btn-delete-comment">Delete</a>
     </div>
     {% endif %}
+
+    {% if post.tags.all %}
+    <div class="post-tags" style="margin: 1.5rem 0;">
+        <strong>Tags:</strong>
+        {% for tag in post.tags.all %}
+        <a href="{% url 'posts-by-tag' tag.slug %}"
+           class="tag"
+           style="background-color: #e9ecef; color: #495057; padding: 0.25rem 0.5rem; border-radius: 3px; text-decoration: none; margin-left: 0.5rem; font-size: 0.9rem;">
+            {{ tag.name }}
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
 </body>
 </html>

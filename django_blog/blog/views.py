@@ -105,3 +105,94 @@ class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 # Home view
 def home(request):
     return render(request, 'blog/home.html', {'posts': Post.objects.all().order_by('-date_posted')})
+
+# blog/views.py (add search view and tag views)
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.decorators import login_required
+from django.views.generic import (
+    ListView,
+    DetailView,
+    CreateView,
+    UpdateView,
+    DeleteView
+)
+from django.contrib.auth import login, logout, authenticate
+from django.contrib import messages
+from django.urls import reverse_lazy
+from django.db.models import Q
+from .models import Post, Comment, Tag  # Add Tag import
+from .forms import PostForm, CommentForm, CustomUserCreationForm, ProfileUpdateForm
+
+# Search View
+def search_posts(request):
+    query = request.GET.get('q', '')
+    posts = Post.objects.all().order_by('-date_posted')
+
+    if query:
+        # Search in title, content, and tags
+        posts = posts.filter(
+            Q(title__icontains=query) |
+            Q(content__icontains=query) |
+            Q(tags__name__icontains=query)  # If using django-taggit
+        ).distinct()
+
+    context = {
+        'posts': posts,
+        'query': query,
+        'results_count': posts.count()
+    }
+    return render(request, 'blog/search_results.html', context)
+
+# Posts by Tag View
+def posts_by_tag(request, tag_slug=None):
+    tag = None
+    posts = Post.objects.all().order_by('-date_posted')
+
+    if tag_slug:
+        if hasattr(Post, 'tags'):  # Using django-taggit
+            posts = posts.filter(tags__slug__in=[tag_slug])
+        else:  # Using custom Tag model
+            tag = get_object_or_404(Tag, slug=tag_slug)
+            posts = tag.posts.all().order_by('-date_posted')
+
+    context = {
+        'tag': tag,
+        'posts': posts,
+        'posts_count': posts.count()
+    }
+    return render(request, 'blog/posts_by_tag.html', context)
+
+# Update PostDetailView to show tags in context
+class PostDetailView(DetailView):
+    model = Post
+    template_name = 'blog/post_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['comments'] = self.object.comments.all().order_by('-created_at')
+        context['comment_form'] = CommentForm()
+
+        # Get related posts by tags
+        if hasattr(self.object, 'tags'):
+            post_tags_ids = self.object.tags.values_list('id', flat=True)
+            related_posts = Post.objects.filter(
+                tags__in=post_tags_ids
+            ).exclude(id=self.object.id).distinct()[:3]
+            context['related_posts'] = related_posts
+
+        return context
+
+# Tag List View (Show all tags with post counts)
+def tag_list(request):
+    if hasattr(Post, 'tags'):  # Using django-taggit
+        from taggit.models import Tag
+        tags = Tag.objects.all().annotate(num_posts=models.Count('taggit_taggeditem_items'))
+    else:  # Using custom Tag model
+        tags = Tag.objects.all().annotate(num_posts=models.Count('posts'))
+
+    # Sort by number of posts (descending)
+    tags = tags.order_by('-num_posts')
+
+    return render(request, 'blog/tag_list.html', {'tags': tags})
+

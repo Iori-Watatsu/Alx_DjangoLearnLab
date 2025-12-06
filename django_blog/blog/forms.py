@@ -3,6 +3,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from .models import Post, Comment
+from taggit.forms import TagField, TagWidget
 
 # Custom User Creation Form
 class CustomUserCreationForm(UserCreationForm):
@@ -44,9 +45,17 @@ class ProfileUpdateForm(forms.ModelForm):
 
 # Post Form
 class PostForm(forms.ModelForm):
+    tags = TagField(
+        required=False,
+        widget=TagWidget(attrs={
+            'class': 'form-control',
+            'placeholder': 'Add tags separated by commas'
+        })
+    )
+
     class Meta:
         model = Post
-        fields = ['title', 'content']
+        fields = ['title', 'content', 'tags']
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -58,6 +67,12 @@ class PostForm(forms.ModelForm):
                 'rows': 10
             })
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # For editing existing posts, show current tags
+        if self.instance.pk:
+            self.fields['tags'].initial = ', '.join(self.instance.tags.names())
 
 # Comment Form
 class CommentForm(forms.ModelForm):
