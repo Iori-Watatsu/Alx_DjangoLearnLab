@@ -1,0 +1,350 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Django Blog - Home</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+
+        .navbar {
+            background: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: #555;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .nav-links a:hover {
+            background-color: #f0f0f0;
+            color: #007bff;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 2.5rem;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .posts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .post-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .post-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .post-content {
+            padding: 1.5rem;
+        }
+
+        .post-title {
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+            color: #333;
+        }
+
+        .post-title a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .post-title a:hover {
+            color: #007bff;
+        }
+
+        .post-meta {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .post-excerpt {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .post-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+
+        .btn-edit {
+            background-color: #28a745;
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .btn-delete {
+            background-color: #dc3545;
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .btn-read-more {
+            display: inline-block;
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .btn-read-more:hover {
+            text-decoration: underline;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+        }
+
+        .empty-state h2 {
+            color: #666;
+            margin-bottom: 1rem;
+        }
+
+        .messages {
+            margin-bottom: 2rem;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            border: 1px solid transparent;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+
+        .alert-info {
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+
+        .alert-warning {
+            background-color: #fff3cd;
+            border-color: #ffeeba;
+            color: #856404;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+            color: #666;
+            border-top: 1px solid #eee;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .posts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="{% url 'home' %}" class="navbar-brand">Django Blog</a>
+        <div class="nav-links">
+            <a href="{% url 'home' %}">Home</a>
+            <a href="{% url 'post-list' %}">All Posts</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'post-create' %}">New Post</a>
+                <a href="{% url 'profile' %}">Profile</a>
+                <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-primary" style="background-color: #dc3545;">Logout</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}">Login</a>
+                <a href="{% url 'register' %}">Register</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="container">
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="header">
+            <h1>Welcome to Django Blog</h1>
+            <p>Share your thoughts, ideas, and experiences with the world.</p>
+            {% if user.is_authenticated %}
+            <a href="{% url 'post-create' %}" class="btn-primary" style="margin-top: 1rem; display: inline-block;">Create New Post</a>
+            {% endif %}
+        </div>
+
+        {% if posts %}
+        <div class="posts-grid">
+            {% for post in posts %}
+            <div class="post-card">
+                <div class="post-content">
+                    <h2 class="post-title">
+                        <a href="{% url 'post-detail' post.pk %}">{{ post.title }}</a>
+                    </h2>
+
+                    <div class="post-meta">
+                        <span>By {{ post.author.username }}</span>
+                        <span>{{ post.date_posted|date:"M d, Y" }}</span>
+                    </div>
+
+                    <div class="post-excerpt">
+                        {{ post.content|truncatechars:200 }}
+                    </div>
+
+                    <a href="{% url 'post-detail' post.pk %}" class="btn-read-more">Read More →</a>
+
+                    {% if user.is_authenticated and user == post.author %}
+                    <div class="post-actions">
+                        <a href="{% url 'post-update' post.pk %}" class="btn-edit">Edit</a>
+                        <a href="{% url 'post-delete' post.pk %}" class="btn-delete">Delete</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <h2>No posts yet</h2>
+            <p>Be the first to share your thoughts!</p>
+            {% if user.is_authenticated %}
+            <a href="{% url 'post-create' %}" class="btn-primary" style="margin-top: 1rem; display: inline-block;">Create Your First Post</a>
+            {% else %}
+            <p>Please <a href="{% url 'login' %}">login</a> to create a post.</p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2024 Django Blog. All rights reserved.</p>
+    </footer>
+</body>
+</html>

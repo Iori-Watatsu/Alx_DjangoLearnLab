@@ -53,6 +53,7 @@ urlpatterns = [
     path('post/<int:pk>/edit/', PostUpdateView.as_view(), name='post-update'),
     path('post/<int:pk>/delete/', PostDeleteView.as_view(), name='post-delete'),
     path('post/<int:pk>/update/', PostUpdateView.as_view(), name='post-update'),
+    path('posts/new/', PostCreateView.as_view(), name='post-create'),
     
     # Home page (can be post list or custom home)
     path('', PostListView.as_view(), name='home'),

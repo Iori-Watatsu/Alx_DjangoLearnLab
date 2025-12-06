@@ -16,6 +16,7 @@ from django.views.generic import (
 )
 from .models import Post
 from .forms import PostForm
+from django.urls import reverse_lazy
 
 @csrf_protect
 def register_view(request):
